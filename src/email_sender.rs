@@ -6,6 +6,7 @@ use lettre::AsyncTransport;
 use lettre::message::{header, Attachment, Mailbox, Message, MultiPart, SinglePart};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{AsyncSmtpTransport, SmtpTransport, Tokio1Executor, Transport};
+use lettre::address::AddressError;
 use log::{error, info, warn};
 use tera::{Context, Tera};
 use email_address::EmailAddress;
@@ -22,6 +23,8 @@ pub enum MailkitError {
     Tera(#[from] tera::Error),
     #[error("Build message error: {0}")]
     Build(#[from] lettre::error::Error),
+    #[error("Address parse error: {0}")]
+    Address(#[from] AddressError),
     #[error("Missing environment variable: {0}")]
     MissingEnvVar(&'static str),
 }
