@@ -247,15 +247,12 @@ impl EmailSender {
         for rcpt in &recipients {
             info!("Bulk sending to {}", rcpt);
 
-            let cc_iter = cc.as_ref().and_then(|cc_vec| cc_vec.get(0).cloned().map(std::iter::once));
-            let bcc_iter = bcc.as_ref().and_then(|bcc_vec| bcc_vec.get(0).cloned().map(std::iter::once));
-
             self.send(
                 std::iter::once(rcpt.clone()),
                 subject,
                 body,
-                cc_iter,
-                bcc_iter,
+                cc.clone(),
+                bcc.clone(),
                 attachments,
                 use_tls,
                 html,
