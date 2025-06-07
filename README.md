@@ -106,6 +106,9 @@ sender.send_bulk(
 ).unwrap();
 ```
 
+Each recipient receives its own email, and any addresses provided in `cc` or
+`bcc` are included on every message.
+
 ---
 
 ## Environment Variables
