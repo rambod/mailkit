@@ -56,7 +56,7 @@ impl EmailSender {
             env::var("MAILKIT_TEMPLATE_DIR").unwrap_or_else(|_| "templates".to_owned()),
         )
             .join("**/*");
-        let tera = Tera::new(template_dir.to_str().unwrap())?;
+        let tera = Tera::new(&template_dir.to_string_lossy())?;
 
         info!("EmailSender initialized for {}", user_email);
 
@@ -103,7 +103,7 @@ impl EmailSender {
         S: Into<String>,
     {
         let mut builder = Message::builder()
-            .from(self.user_email.parse::<Mailbox>().unwrap())
+            .from(self.user_email.parse::<Mailbox>()?)
             .subject(subject);
 
         let to_addrs: Vec<Mailbox> = to
@@ -118,8 +118,8 @@ impl EmailSender {
             })
             .collect::<Result<Vec<_>, _>>()?
             .into_iter()
-            .map(|s| s.parse().unwrap())
-            .collect();
+            .map(|s| s.parse())
+            .collect::<Result<_, _>>()?;
         for m in &to_addrs {
             builder = builder.to(m.clone());
         }
@@ -137,8 +137,8 @@ impl EmailSender {
                 })
                 .collect::<Result<Vec<_>, _>>()?
                 .into_iter()
-                .map(|s| s.parse().unwrap())
-                .collect();
+                .map(|s| s.parse())
+                .collect::<Result<_, _>>()?;
             for m in &cc_addrs {
                 builder = builder.cc(m.clone());
             }
@@ -157,8 +157,8 @@ impl EmailSender {
                 })
                 .collect::<Result<Vec<_>, _>>()?
                 .into_iter()
-                .map(|s| s.parse().unwrap())
-                .collect();
+                .map(|s| s.parse())
+                .collect::<Result<_, _>>()?;
             for m in &bcc_addrs {
                 builder = builder.bcc(m.clone());
             }
