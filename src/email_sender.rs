@@ -22,6 +22,8 @@ pub enum MailkitError {
     Tera(#[from] tera::Error),
     #[error("Build message error: {0}")]
     Build(#[from] lettre::error::Error),
+    #[error("Missing environment variable: {0}")]
+    MissingEnvVar(&'static str),
 }
 
 pub struct EmailSender {
@@ -70,9 +72,9 @@ impl EmailSender {
     }
 
     pub fn from_env() -> Result<Self, MailkitError> {
-        let user_email = env::var("EMAIL").expect("EMAIL env var missing");
-        let server = env::var("SMTP_SERVER").expect("SMTP_SERVER env var missing");
-        let password = env::var("EMAIL_PASSWORD").expect("EMAIL_PASSWORD env var missing");
+        let user_email = env::var("EMAIL").map_err(|_| MailkitError::MissingEnvVar("EMAIL"))?;
+        let server = env::var("SMTP_SERVER").map_err(|_| MailkitError::MissingEnvVar("SMTP_SERVER"))?;
+        let password = env::var("EMAIL_PASSWORD").map_err(|_| MailkitError::MissingEnvVar("EMAIL_PASSWORD"))?;
         let port = env::var("SMTP_PORT")
             .unwrap_or_else(|_| "587".into())
             .parse()
