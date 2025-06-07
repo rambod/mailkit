@@ -248,7 +248,7 @@ impl EmailSender {
             info!("Bulk sending to {}", rcpt);
 
             self.send(
-                std::iter::once(rcpt.clone()),
+                vec![rcpt.clone()],
                 subject,
                 body,
                 cc.clone(),
