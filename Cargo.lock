@@ -646,7 +646,6 @@ name = "mailkit"
 version = "0.1.0"
 dependencies = [
  "lettre",
- "log",
  "serde",
  "tera",
  "tokio",

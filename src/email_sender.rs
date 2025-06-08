@@ -6,7 +6,6 @@ use lettre::AsyncTransport;
 use lettre::message::{header, Attachment, Mailbox, Message, MultiPart, SinglePart};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{AsyncSmtpTransport, SmtpTransport, Tokio1Executor, Transport};
-use log::{error, info, warn};
 use tera::{Context, Tera};
 
 use std::error::Error as StdError;
@@ -111,7 +110,7 @@ impl EmailSender {
             .join("**/*");
         let tera = Tera::new(&template_dir.to_string_lossy())?;
 
-        info!("EmailSender initialized for {}", user_email);
+        crate::info!("EmailSender initialized for {}", user_email);
 
         Ok(Self {
             user_email,
@@ -148,7 +147,7 @@ impl EmailSender {
         if is_valid_email(addr) {
             Ok(addr.to_lowercase())
         } else {
-            error!("Invalid email address: {}", addr);
+            crate::error!("Invalid email address: {}", addr);
             Err(MailkitError::Validation(addr.into()))
         }
     }
@@ -264,7 +263,7 @@ impl EmailSender {
         S: Into<String> + Clone,
     {
         let recipients_vec: Vec<String> = recipients.clone().into_iter().map(|x| x.into()).collect();
-        info!("Sending email to: {}", recipients_vec.join(", "));
+        crate::info!("Sending email to: {}", recipients_vec.join(", "));
 
         let builder = self.create_base_message(subject, recipients.clone(), cc.clone(), bcc.clone())?;
 
@@ -307,7 +306,7 @@ impl EmailSender {
         html: bool,
     ) -> Result<(), MailkitError> {
         for rcpt in &recipients {
-            info!("Bulk sending to {}", rcpt);
+            crate::info!("Bulk sending to {}", rcpt);
 
             self.send(
                 vec![rcpt.clone()],
@@ -341,7 +340,7 @@ impl EmailSender {
         S: Into<String> + Clone + Send + 'static,
     {
         let recipients_vec: Vec<String> = recipients.clone().into_iter().map(|x| x.into()).collect();
-        info!("Async sending to: {}", recipients_vec.join(", "));
+        crate::info!("Async sending to: {}", recipients_vec.join(", "));
 
         let builder = self.create_base_message(subject, recipients.clone(), cc.clone(), bcc.clone())?;
 
@@ -384,7 +383,7 @@ impl EmailSender {
         use_tls: bool,
     ) -> Result<(), MailkitError> {
         let recipient_str = recipient.into();
-        info!(
+        crate::info!(
         "Sending templated email to {} using {}",
         recipient_str,
         template_name
@@ -429,7 +428,7 @@ impl SendAgent {
         attachments: Option<&[String]>,
         tls: bool,
     ) -> Result<(), MailkitError> {
-        warn!("SendAgent is deprecated, use EmailSender instead");
+        crate::warn!("SendAgent is deprecated, use EmailSender instead");
         (self.0).send(
             recipient_email,
             subject,
@@ -453,7 +452,7 @@ impl SendAgent {
         attachments: Option<&[String]>,
         tls: bool,
     ) -> Result<(), MailkitError> {
-        warn!("send_mail_with_template is deprecated, use send_template instead");
+        crate::warn!("send_mail_with_template is deprecated, use send_template instead");
         (self.0).send_template(
             recipient_email,
             subject,
