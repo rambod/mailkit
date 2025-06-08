@@ -286,13 +286,13 @@ impl EmailSender {
             SinglePart::plain(body.to_string())
         };
 
-        let mut multipart = MultiPart::mixed().singlepart(content);
-
-        if let Some(files) = attachments {
-            multipart = self.attach_files(multipart, files)?;
-        }
-
-        let msg = builder.multipart(multipart)?;
+        let msg = if let Some(files) = attachments {
+            let multipart = MultiPart::mixed().singlepart(content);
+            let multipart = self.attach_files(multipart, files)?;
+            builder.multipart(multipart)?
+        } else {
+            builder.singlepart(content)?
+        };
 
         let creds = Credentials::new(self.user_email.clone(), self.user_password.clone());
         let mailer = SmtpTransport::relay(&self.smtp_server)?
@@ -365,13 +365,13 @@ impl EmailSender {
             SinglePart::plain(body.to_string())
         };
 
-        let mut multipart = MultiPart::mixed().singlepart(content);
-
-        if let Some(files) = attachments {
-            multipart = self.attach_files(multipart, files)?;
-        }
-
-        let msg = builder.multipart(multipart)?;
+        let msg = if let Some(files) = attachments {
+            let multipart = MultiPart::mixed().singlepart(content);
+            let multipart = self.attach_files(multipart, files)?;
+            builder.multipart(multipart)?
+        } else {
+            builder.singlepart(content)?
+        };
 
         let creds = Credentials::new(self.user_email.clone(), self.user_password.clone());
         let mailer: AsyncSmtpTransport<Tokio1Executor> =
