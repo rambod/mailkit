@@ -8,7 +8,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use lettre::AsyncTransport;
-use lettre::message::{header, Attachment, Mailbox, Message, MultiPart, SinglePart};
+use lettre::message::{Attachment, Mailbox, Message, MultiPart, SinglePart};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{AsyncSmtpTransport, SmtpTransport, Tokio1Executor, Transport};
 use tera::{Context, Tera};
@@ -277,22 +277,18 @@ impl EmailSender {
         let builder = self.create_base_message(subject, recipients.clone(), cc.clone(), bcc.clone())?;
 
         let content = if html {
-            let ctype = header::ContentType::parse("text/html; charset=utf-8")
-                .map_err(|_| MailkitError::Validation("Invalid content type".into()))?;
-            SinglePart::builder()
-                .header(ctype)
-                .body(body.to_string())
+            SinglePart::html(body.to_string())
         } else {
             SinglePart::plain(body.to_string())
         };
 
-        let mut multipart = MultiPart::mixed().singlepart(content);
-
-        if let Some(files) = attachments {
-            multipart = self.attach_files(multipart, files)?;
-        }
-
-        let msg = builder.multipart(multipart)?;
+        let msg = if let Some(files) = attachments {
+            let multipart = MultiPart::mixed().singlepart(content);
+            let multipart = self.attach_files(multipart, files)?;
+            builder.multipart(multipart)?
+        } else {
+            builder.singlepart(content)?
+        };
 
         let creds = Credentials::new(self.user_email.clone(), self.user_password.clone());
         let mailer = SmtpTransport::relay(&self.smtp_server)?
@@ -356,22 +352,18 @@ impl EmailSender {
         let builder = self.create_base_message(subject, recipients.clone(), cc.clone(), bcc.clone())?;
 
         let content = if html {
-            let ctype = header::ContentType::parse("text/html; charset=utf-8")
-                .map_err(|_| MailkitError::Validation("Invalid content type".into()))?;
-            SinglePart::builder()
-                .header(ctype)
-                .body(body.to_string())
+            SinglePart::html(body.to_string())
         } else {
             SinglePart::plain(body.to_string())
         };
 
-        let mut multipart = MultiPart::mixed().singlepart(content);
-
-        if let Some(files) = attachments {
-            multipart = self.attach_files(multipart, files)?;
-        }
-
-        let msg = builder.multipart(multipart)?;
+        let msg = if let Some(files) = attachments {
+            let multipart = MultiPart::mixed().singlepart(content);
+            let multipart = self.attach_files(multipart, files)?;
+            builder.multipart(multipart)?
+        } else {
+            builder.singlepart(content)?
+        };
 
         let creds = Credentials::new(self.user_email.clone(), self.user_password.clone());
         let mailer: AsyncSmtpTransport<Tokio1Executor> =
