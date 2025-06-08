@@ -1,3 +1,8 @@
+//! Email sending utilities built on top of `lettre`.
+//!
+//! Create an [`EmailSender`] and call [`EmailSender::send`] or
+//! [`EmailSender::send_async`] to deliver messages.
+
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -78,6 +83,7 @@ impl From<lettre::address::AddressError> for MailkitError {
     }
 }
 
+/// Main entry point for sending emails.
 pub struct EmailSender {
     user_email: String,
     user_password: String,
@@ -127,10 +133,11 @@ impl EmailSender {
         let user_email = env::var("EMAIL").map_err(|_| MailkitError::MissingEnvVar("EMAIL"))?;
         let server = env::var("SMTP_SERVER").map_err(|_| MailkitError::MissingEnvVar("SMTP_SERVER"))?;
         let password = env::var("EMAIL_PASSWORD").map_err(|_| MailkitError::MissingEnvVar("EMAIL_PASSWORD"))?;
-        let port = env::var("SMTP_PORT")
-            .unwrap_or_else(|_| "587".into())
+        let port_str = env::var("SMTP_PORT").unwrap_or_else(|_| "587".into());
+        let port = port_str
             .parse()
-            .unwrap_or(587);
+            .map_err(|_| MailkitError::Validation("Invalid SMTP_PORT".into()))?;
+
         Self::new(user_email, server, password, port, 10, true)
     }
 
@@ -240,8 +247,10 @@ impl EmailSender {
                 .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or("attachment");
+            let ctype = lettre::message::header::ContentType::parse("application/octet-stream")
+                .map_err(|_| MailkitError::Validation("Invalid content type".into()))?;
             let attachment = Attachment::new(filename.to_string())
-                .body(data, lettre::message::header::ContentType::parse("application/octet-stream").unwrap());
+                .body(data, ctype);
             mp = mp.singlepart(attachment);
         }
         Ok(mp)
@@ -268,8 +277,10 @@ impl EmailSender {
         let builder = self.create_base_message(subject, recipients.clone(), cc.clone(), bcc.clone())?;
 
         let content = if html {
+            let ctype = header::ContentType::parse("text/html; charset=utf-8")
+                .map_err(|_| MailkitError::Validation("Invalid content type".into()))?;
             SinglePart::builder()
-                .header(header::ContentType::parse("text/html; charset=utf-8").unwrap())
+                .header(ctype)
                 .body(body.to_string())
         } else {
             SinglePart::plain(body.to_string())
@@ -345,8 +356,10 @@ impl EmailSender {
         let builder = self.create_base_message(subject, recipients.clone(), cc.clone(), bcc.clone())?;
 
         let content = if html {
+            let ctype = header::ContentType::parse("text/html; charset=utf-8")
+                .map_err(|_| MailkitError::Validation("Invalid content type".into()))?;
             SinglePart::builder()
-                .header(header::ContentType::parse("text/html; charset=utf-8").unwrap())
+                .header(ctype)
                 .body(body.to_string())
         } else {
             SinglePart::plain(body.to_string())
@@ -425,7 +438,7 @@ impl EmailSender {
 
 }
 
-// Backward compatibility layer
+/// Backward compatibility wrapper around [`EmailSender`].
 pub struct SendAgent(pub EmailSender);
 
 impl SendAgent {

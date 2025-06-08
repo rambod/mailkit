@@ -1,3 +1,8 @@
+//! A very small logger used when no other logger is configured.
+//!
+//! Call [`SimpleLogger::init`] once at startup and use the [`info!`],
+//! [`warn!`] and [`error!`] macros provided by this crate.
+
 #[derive(Clone, Copy, PartialEq, PartialOrd)]
 pub enum Level {
     Error,
