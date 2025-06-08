@@ -1,3 +1,7 @@
+//! Minimal JSON type used by MailKit templates.
+//!
+//! The [`json!`] macro can be used to easily build `JsonValue` structures.
+
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -70,11 +74,11 @@ macro_rules! json {
     };
     ({$($key:tt : $value:tt),* $(,)?}) => {{
         let mut map = std::collections::BTreeMap::new();
-        $( map.insert($key.to_string(), $crate::json::json!($value)); )*
+        $( map.insert($key.to_string(), $crate::json!($value)); )*
         $crate::json::JsonValue::Object(map)
     }};
     ([$($elem:tt),* $(,)?]) => {
-        $crate::json::JsonValue::Array(vec![ $( $crate::json::json!($elem) ),* ])
+        $crate::json::JsonValue::Array(vec![ $( $crate::json!($elem) ),* ])
     };
     ($other:expr) => {
         $crate::json::JsonValue::from($other)
