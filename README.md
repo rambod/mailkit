@@ -29,7 +29,7 @@ Website: [rambod.net](https://rambod.net)
 - lettre
 - tera
 - log (with built-in simple logger)
-- serde, serde_json (for templates)
+- serde (for templates)
 
 ## Quick Start
 
@@ -40,7 +40,6 @@ lettre = { version = "0.11", features = ["smtp-transport", "tokio1"] }
 tera = "1.17"
 log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
 ```
 
 ### 2. Example Usage
@@ -72,7 +71,8 @@ sender.send(
 ### 3. HTML or Tera Template Example
 
 ```rust
-let tera_ctx = serde_json::json!({
+use mailkit::json;
+let tera_ctx = json!({
     "username": "Rambod",
     "link": "https://rambod.net"
 });
