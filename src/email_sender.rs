@@ -256,6 +256,34 @@ impl EmailSender {
         Ok(mp)
     }
 
+    fn build_sync_mailer(&self) -> Result<SmtpTransport, MailkitError> {
+        let creds = Credentials::new(self.user_email.clone(), self.user_password.clone());
+        let builder = if self.port == 465 {
+            SmtpTransport::relay(&self.smtp_server)?
+        } else {
+            SmtpTransport::starttls_relay(&self.smtp_server)?
+        };
+        Ok(builder
+            .credentials(creds)
+            .port(self.port)
+            .timeout(Some(self.timeout))
+            .build())
+    }
+
+    fn build_async_mailer(&self) -> Result<AsyncSmtpTransport<Tokio1Executor>, MailkitError> {
+        let creds = Credentials::new(self.user_email.clone(), self.user_password.clone());
+        let builder = if self.port == 465 {
+            AsyncSmtpTransport::<Tokio1Executor>::relay(&self.smtp_server)?
+        } else {
+            AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&self.smtp_server)?
+        };
+        Ok(builder
+            .credentials(creds)
+            .port(self.port)
+            .timeout(Some(self.timeout))
+            .build())
+    }
+
     pub fn send<I, S>(
         &self,
         recipients: I,
@@ -289,13 +317,7 @@ impl EmailSender {
         } else {
             builder.singlepart(content)?
         };
-
-        let creds = Credentials::new(self.user_email.clone(), self.user_password.clone());
-        let mailer = SmtpTransport::relay(&self.smtp_server)?
-            .credentials(creds)
-            .port(self.port)
-            .timeout(Some(self.timeout))
-            .build();
+        let mailer = self.build_sync_mailer()?;
 
         mailer.send(&msg)?;
         Ok(())
@@ -365,13 +387,7 @@ impl EmailSender {
             builder.singlepart(content)?
         };
 
-        let creds = Credentials::new(self.user_email.clone(), self.user_password.clone());
-        let mailer: AsyncSmtpTransport<Tokio1Executor> =
-            AsyncSmtpTransport::<Tokio1Executor>::relay(&self.smtp_server)?
-                .credentials(creds)
-                .port(self.port)
-                .timeout(Some(self.timeout))
-                .build();
+        let mailer = self.build_async_mailer()?;
 
         mailer.send(msg).await?;
         Ok(())
