@@ -22,6 +22,8 @@ pub enum MailkitError {
     Tera(#[from] tera::Error),
     #[error("Build message error: {0}")]
     Build(#[from] lettre::error::Error),
+    #[error("Address parse error: {0}")]
+    Address(#[from] lettre::address::AddressError),
     #[error("Missing environment variable: {0}")]
     MissingEnvVar(&'static str),
 }
