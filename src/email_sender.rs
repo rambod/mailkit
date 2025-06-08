@@ -9,22 +9,74 @@ use lettre::{AsyncSmtpTransport, SmtpTransport, Tokio1Executor, Transport};
 use log::{error, info, warn};
 use tera::{Context, Tera};
 
-#[derive(Debug, thiserror::Error)]
+use std::error::Error as StdError;
+use std::fmt;
+#[derive(Debug)]
 pub enum MailkitError {
-    #[error("Email validation failed: {0}")]
     Validation(String),
-    #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("SMTP error: {0}")]
-    Smtp(#[from] lettre::transport::smtp::Error),
-    #[error("Template error: {0}")]
-    Tera(#[from] tera::Error),
-    #[error("Build message error: {0}")]
-    Build(#[from] lettre::error::Error),
-    #[error("Address parse error: {0}")]
-    Address(#[from] lettre::address::AddressError),
-    #[error("Missing environment variable: {0}")]
+    Io(std::io::Error),
+    Smtp(lettre::transport::smtp::Error),
+    Tera(tera::Error),
+    Build(lettre::error::Error),
+    Address(lettre::address::AddressError),
     MissingEnvVar(&'static str),
+}
+
+impl fmt::Display for MailkitError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            MailkitError::Validation(msg) => write!(f, "Email validation failed: {}", msg),
+            MailkitError::Io(err) => write!(f, "IO error: {}", err),
+            MailkitError::Smtp(err) => write!(f, "SMTP error: {}", err),
+            MailkitError::Tera(err) => write!(f, "Template error: {}", err),
+            MailkitError::Build(err) => write!(f, "Build message error: {}", err),
+            MailkitError::Address(err) => write!(f, "Address parse error: {}", err),
+            MailkitError::MissingEnvVar(var) => write!(f, "Missing environment variable: {}", var),
+        }
+    }
+}
+
+impl StdError for MailkitError {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        match self {
+            MailkitError::Io(err) => Some(err),
+            MailkitError::Smtp(err) => Some(err),
+            MailkitError::Tera(err) => Some(err),
+            MailkitError::Build(err) => Some(err),
+            MailkitError::Address(err) => Some(err),
+            _ => None,
+        }
+    }
+}
+
+impl From<std::io::Error> for MailkitError {
+    fn from(e: std::io::Error) -> Self {
+        MailkitError::Io(e)
+    }
+}
+
+impl From<lettre::transport::smtp::Error> for MailkitError {
+    fn from(e: lettre::transport::smtp::Error) -> Self {
+        MailkitError::Smtp(e)
+    }
+}
+
+impl From<tera::Error> for MailkitError {
+    fn from(e: tera::Error) -> Self {
+        MailkitError::Tera(e)
+    }
+}
+
+impl From<lettre::error::Error> for MailkitError {
+    fn from(e: lettre::error::Error) -> Self {
+        MailkitError::Build(e)
+    }
+}
+
+impl From<lettre::address::AddressError> for MailkitError {
+    fn from(e: lettre::address::AddressError) -> Self {
+        MailkitError::Address(e)
+    }
 }
 
 pub struct EmailSender {
