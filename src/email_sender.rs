@@ -8,7 +8,6 @@ use lettre::transport::smtp::authentication::Credentials;
 use lettre::{AsyncSmtpTransport, SmtpTransport, Tokio1Executor, Transport};
 use log::{error, info, warn};
 use tera::{Context, Tera};
-use email_address::EmailAddress;
 
 #[derive(Debug, thiserror::Error)]
 pub enum MailkitError {
@@ -85,7 +84,16 @@ impl EmailSender {
     }
 
     fn check_email(addr: &str) -> Result<String, MailkitError> {
-        if EmailAddress::is_valid(addr) {
+        fn is_valid_email(addr: &str) -> bool {
+            let mut parts = addr.split('@');
+            if let (Some(local), Some(domain), None) = (parts.next(), parts.next(), parts.next()) {
+                !local.is_empty() && !domain.is_empty() && domain.contains('.')
+            } else {
+                false
+            }
+        }
+
+        if is_valid_email(addr) {
             Ok(addr.to_lowercase())
         } else {
             error!("Invalid email address: {}", addr);
