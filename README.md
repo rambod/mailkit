@@ -28,7 +28,7 @@ Website: [rambod.net](https://rambod.net)
 
 - lettre
 - tera
-- log, env_logger (optional)
+- log (with built-in simple logger)
 - serde, serde_json (for templates)
 
 ## Quick Start
@@ -39,7 +39,6 @@ Website: [rambod.net](https://rambod.net)
 lettre = { version = "0.11", features = ["smtp-transport", "tokio1"] }
 tera = "1.17"
 log = "0.4"
-env_logger = "0.9"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 ```
@@ -47,7 +46,7 @@ serde_json = "1.0"
 ### 2. Example Usage
 
 ```rust
-use mailkit::EmailSender;
+use mailkit::{EmailSender, SimpleLogger};
 use std::env;
 
 env::set_var("EMAIL", "your@email.com");
@@ -55,6 +54,7 @@ env::set_var("EMAIL_PASSWORD", "yourpassword");
 env::set_var("SMTP_SERVER", "smtp.yourprovider.com");
 env::set_var("SMTP_PORT", "587");
 
+SimpleLogger::init().unwrap();
 let sender = EmailSender::from_env().unwrap();
 
 sender.send(
@@ -127,7 +127,7 @@ Each recipient receives its own email, and any addresses provided in `cc` or
 
 ## Logging
 
-- Uses `log` crate. Set up `env_logger` for debugging.
+- Uses the `log` crate. Call `mailkit::SimpleLogger::init()` to enable basic logging.
 
 ---
 
