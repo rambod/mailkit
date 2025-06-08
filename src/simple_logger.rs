@@ -1,37 +1,69 @@
-use log::{LevelFilter, Log, Metadata, Record, SetLoggerError};
-use std::sync::OnceLock;
+#[derive(Clone, Copy, PartialEq, PartialOrd)]
+pub enum Level {
+    Error,
+    Warn,
+    Info,
+}
+
+impl core::fmt::Display for Level {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let s = match self {
+            Level::Error => "ERROR",
+            Level::Warn => "WARN",
+            Level::Info => "INFO",
+        };
+        f.write_str(s)
+    }
+}
 
 pub struct SimpleLogger {
-    level: LevelFilter,
+    level: Level,
 }
 
-impl Log for SimpleLogger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= self.level
-    }
-
-    fn log(&self, record: &Record) {
-        if self.enabled(record.metadata()) {
-            println!("[{}] {}", record.level(), record.args());
-        }
-    }
-
-    fn flush(&self) {}
-}
+static LOGGER: std::sync::OnceLock<SimpleLogger> = std::sync::OnceLock::new();
 
 impl SimpleLogger {
-    pub fn init() -> Result<(), SetLoggerError> {
-        static LOGGER: OnceLock<SimpleLogger> = OnceLock::new();
+    pub fn init() {
         let level = match std::env::var("RUST_LOG").as_deref() {
-            Ok("trace") => LevelFilter::Trace,
-            Ok("debug") => LevelFilter::Debug,
-            Ok("warn") => LevelFilter::Warn,
-            Ok("error") => LevelFilter::Error,
-            _ => LevelFilter::Info,
+            Ok("error") => Level::Error,
+            Ok("warn") => Level::Warn,
+            _ => Level::Info,
         };
-        let logger = LOGGER.get_or_init(|| SimpleLogger { level });
-        log::set_logger(logger)?;
-        log::set_max_level(level);
-        Ok(())
+        LOGGER.get_or_init(|| SimpleLogger { level });
     }
+
+    fn log(&self, level: Level, msg: &str) {
+        if level <= self.level {
+            println!("[{}] {}", level, msg);
+        }
+    }
+}
+
+pub fn log(level: Level, msg: &str) {
+    if let Some(logger) = LOGGER.get() {
+        logger.log(level, msg);
+    } else {
+        println!("[{}] {}", level, msg);
+    }
+}
+
+#[macro_export]
+macro_rules! info {
+    ($($arg:tt)*) => {
+        $crate::simple_logger::log($crate::simple_logger::Level::Info, &format!($($arg)*));
+    };
+}
+
+#[macro_export]
+macro_rules! warn {
+    ($($arg:tt)*) => {
+        $crate::simple_logger::log($crate::simple_logger::Level::Warn, &format!($($arg)*));
+    };
+}
+
+#[macro_export]
+macro_rules! error {
+    ($($arg:tt)*) => {
+        $crate::simple_logger::log($crate::simple_logger::Level::Error, &format!($($arg)*));
+    };
 }
