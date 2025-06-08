@@ -28,7 +28,6 @@ Website: [rambod.net](https://rambod.net)
 
 - lettre
 - tera
-- thiserror
 - log, env_logger (optional)
 - serde, serde_json (for templates)
 
@@ -39,7 +38,6 @@ Website: [rambod.net](https://rambod.net)
 ```toml
 lettre = { version = "0.11", features = ["smtp-transport", "tokio1"] }
 tera = "1.17"
-thiserror = "1.0"
 log = "0.4"
 env_logger = "0.9"
 serde = { version = "1.0", features = ["derive"] }
