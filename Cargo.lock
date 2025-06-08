@@ -648,7 +648,6 @@ dependencies = [
  "lettre",
  "log",
  "serde",
- "serde_json",
  "tera",
  "tokio",
 ]
