@@ -17,7 +17,8 @@ Website: [rambod.net](https://rambod.net)
 - Environment variable configuration for secrets
 - CC/BCC
 - Bulk sending
-- Input email validation
+- Input email validation (built-in, no external crate)
+- Minimal dependencies
 - Fully customizable
 - **No IMAP support (by design for now)**
 
@@ -27,7 +28,6 @@ Website: [rambod.net](https://rambod.net)
 
 - lettre
 - tera
-- email_address
 - thiserror
 - log, env_logger (optional)
 - serde, serde_json (for templates)
@@ -39,7 +39,6 @@ Website: [rambod.net](https://rambod.net)
 ```toml
 lettre = { version = "0.11", features = ["smtp-transport", "tokio1"] }
 tera = "1.17"
-email_address = "0.2"
 thiserror = "1.0"
 log = "0.4"
 env_logger = "0.9"
