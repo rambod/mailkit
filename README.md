@@ -83,6 +83,7 @@ sender.send_template(
     "welcome.html",    // Path inside ./templates/
     &tera_ctx,
     None,              // CC
+    None,              // BCC
     None,              // Attachments
     false
 ).unwrap();

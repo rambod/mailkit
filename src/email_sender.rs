@@ -372,16 +372,24 @@ impl EmailSender {
         Ok(())
     }
 
-    pub fn send_template<S: Into<String>>(
+    pub fn send_template<S, CI, BI, CCItem, BItem>(
         &self,
         recipient: S,
         subject: &str,
         template_name: &str,
         context: &crate::json::JsonValue,
-        cc: Option<Vec<String>>,
+        cc: Option<CI>,
+        bcc: Option<BI>,
         attachments: Option<&[String]>,
         use_tls: bool,
-    ) -> Result<(), MailkitError> {
+    ) -> Result<(), MailkitError>
+    where
+        S: Into<String>,
+        CI: IntoIterator<Item = CCItem> + Clone,
+        BI: IntoIterator<Item = BItem> + Clone,
+        CCItem: Into<String> + Clone,
+        BItem: Into<String> + Clone,
+    {
         let recipient_str = recipient.into();
         crate::info!(
         "Sending templated email to {} using {}",
@@ -396,16 +404,19 @@ impl EmailSender {
         }
         let body = self.tera.render(template_name, &ctx)?;
 
-        // Only use first cc email, or None
-        let cc_iter = cc.as_ref().and_then(|v| v.get(0).cloned().map(std::iter::once));
-        let bcc_iter = None::<std::iter::Once<String>>;
+        let cc_vec = cc
+            .clone()
+            .map(|c| c.into_iter().map(|s| s.into()).collect::<Vec<String>>());
+        let bcc_vec = bcc
+            .clone()
+            .map(|c| c.into_iter().map(|s| s.into()).collect::<Vec<String>>());
 
         self.send(
-            std::iter::once(recipient_str),
+            vec![recipient_str],
             subject,
             &body,
-            cc_iter,
-            bcc_iter,
+            cc_vec,
+            bcc_vec,
             attachments,
             use_tls,
             true,
@@ -449,6 +460,7 @@ impl SendAgent {
         template_path: &str,
         template_vars: &crate::json::JsonValue,
         cc: Option<Vec<String>>,
+        bcc: Option<Vec<String>>,
         attachments: Option<&[String]>,
         tls: bool,
     ) -> Result<(), MailkitError> {
@@ -459,6 +471,7 @@ impl SendAgent {
             template_path,
             template_vars,
             cc,
+            bcc,
             attachments,
             tls,
         )
