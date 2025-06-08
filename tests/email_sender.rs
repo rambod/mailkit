@@ -43,6 +43,7 @@ fn from_env_missing() {
 
 /// This test will actually send a real email using Gmail SMTP.
 /// You must fill in your real credentials and recipient!
+#[ignore]
 #[test]
 fn send_real_gmail() {
     // Fill these in before running!
