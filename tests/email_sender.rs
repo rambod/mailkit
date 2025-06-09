@@ -1,7 +1,9 @@
 use mailkit::EmailSender;
+use serial_test::serial;
 use std::env;
 
 #[test]
+#[serial]
 fn new_valid_email() {
     unsafe { env::set_var("MAILKIT_TEMPLATE_DIR", "tests/templates"); }
     let sender = EmailSender::new(
@@ -16,6 +18,7 @@ fn new_valid_email() {
 }
 
 #[test]
+#[serial]
 fn new_invalid_email() {
     unsafe { env::set_var("MAILKIT_TEMPLATE_DIR", "tests/templates"); }
     let sender = EmailSender::new(
@@ -30,6 +33,7 @@ fn new_invalid_email() {
 }
 
 #[test]
+#[serial]
 fn from_env_missing() {
     unsafe {
         env::remove_var("EMAIL");
@@ -41,10 +45,26 @@ fn from_env_missing() {
     assert!(res.is_err());
 }
 
+#[test]
+#[serial]
+fn from_env_valid() {
+    unsafe {
+        env::set_var("MAILKIT_TEMPLATE_DIR", "tests/templates");
+        env::set_var("EMAIL", "user@example.com");
+        env::set_var("SMTP_SERVER", "smtp.example.com");
+        env::set_var("EMAIL_PASSWORD", "password");
+        env::set_var("SMTP_PORT", "25");
+    }
+
+    let res = EmailSender::from_env();
+    assert!(res.is_ok());
+}
+
 /// This test will actually send a real email using Gmail SMTP.
 /// You must fill in your real credentials and recipient!
 #[ignore]
 #[test]
+#[serial]
 fn send_real_gmail() {
     // Fill these in before running!
     let your_gmail = "YOUR_GMAIL@gmail.com";
