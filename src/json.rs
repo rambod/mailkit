@@ -72,9 +72,14 @@ macro_rules! json {
     (null) => {
         $crate::json::JsonValue::Null
     };
-    ({$($key:tt : $value:tt),* $(,)?}) => {{
+    ({$($key:literal : $value:tt),* $(,)?}) => {{
         let mut map = std::collections::BTreeMap::new();
         $( map.insert($key.to_string(), $crate::json!($value)); )*
+        $crate::json::JsonValue::Object(map)
+    }};
+    ({$($key:ident : $value:tt),* $(,)?}) => {{
+        let mut map = std::collections::BTreeMap::new();
+        $( map.insert(stringify!($key).to_string(), $crate::json!($value)); )*
         $crate::json::JsonValue::Object(map)
     }};
     ([$($elem:tt),* $(,)?]) => {
