@@ -86,7 +86,7 @@ fn send_real_gmail() {
     let subject = "MailKit Rust Test";
     let body = "This is a test email sent by MailKit integration test.";
 
-    // No CC, no BCC, no attachments, TLS flag set to true, plain text
+    // No CC, no BCC, no attachments, TLS flag set to true (direct TLS), plain text
     let result = sender.send(
         recipients,
         subject,
