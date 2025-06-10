@@ -4,6 +4,8 @@
 //! which provides sync and async email sending. See the individual modules
 //! for more details.
 
+#![forbid(unsafe_code)]
+
 pub mod email_sender;
 pub mod simple_logger;
 pub mod json;
