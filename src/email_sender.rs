@@ -352,6 +352,41 @@ impl EmailSender {
         Ok(())
     }
 
+    pub async fn send_bulk_async(
+        &self,
+        recipients: Vec<String>,
+        subject: &str,
+        body: &str,
+        cc: Option<Vec<String>>,
+        bcc: Option<Vec<String>>,
+        attachments: Option<&[String]>,
+        use_tls: bool,
+        html: bool,
+    ) -> Result<(), MailkitError> {
+        use futures::stream::{FuturesUnordered, StreamExt};
+
+        let mut futures = FuturesUnordered::new();
+        for rcpt in recipients {
+            crate::info!("Bulk async sending to {}", rcpt);
+            futures.push(self.send_async(
+                vec![rcpt],
+                subject,
+                body,
+                cc.clone(),
+                bcc.clone(),
+                attachments,
+                use_tls,
+                html,
+            ));
+        }
+
+        while let Some(res) = futures.next().await {
+            res?;
+        }
+
+        Ok(())
+    }
+
 
     pub async fn send_async<I, S>(
         &self,

@@ -104,6 +104,24 @@ sender.send_bulk(
 ).unwrap();
 ```
 
+### 5. Async Bulk Send Example
+
+```rust
+#[tokio::main]
+async fn main() {
+    sender.send_bulk_async(
+        vec!["a@email.com".into(), "b@email.com".into()],
+        "Subject for all",
+        "Content for all.",
+        None,
+        None,
+        None,
+        false,
+        false,
+    ).await.unwrap();
+}
+```
+
 Each recipient receives its own email, and any addresses provided in `cc` or
 `bcc` are included on every message.
 
