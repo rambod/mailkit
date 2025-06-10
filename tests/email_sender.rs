@@ -1,11 +1,20 @@
 use mailkit::EmailSender;
 use serial_test::serial;
 use std::env;
+use std::ffi::OsStr;
+
+fn set_var<K: AsRef<OsStr>, V: AsRef<OsStr>>(key: K, val: V) {
+    unsafe { env::set_var(key, val) }
+}
+
+fn remove_var<K: AsRef<OsStr>>(key: K) {
+    unsafe { env::remove_var(key) }
+}
 
 #[test]
 #[serial]
 fn new_valid_email() {
-    unsafe { env::set_var("MAILKIT_TEMPLATE_DIR", "tests/templates"); }
+    set_var("MAILKIT_TEMPLATE_DIR", "tests/templates");
     let sender = EmailSender::new(
         "user@example.com",
         "smtp.example.com",
@@ -20,7 +29,7 @@ fn new_valid_email() {
 #[test]
 #[serial]
 fn new_invalid_email() {
-    unsafe { env::set_var("MAILKIT_TEMPLATE_DIR", "tests/templates"); }
+    set_var("MAILKIT_TEMPLATE_DIR", "tests/templates");
     let sender = EmailSender::new(
         "invalid",
         "smtp.example.com",
@@ -35,12 +44,10 @@ fn new_invalid_email() {
 #[test]
 #[serial]
 fn from_env_missing() {
-    unsafe {
-        env::remove_var("EMAIL");
-        env::remove_var("SMTP_SERVER");
-        env::remove_var("EMAIL_PASSWORD");
-        env::remove_var("SMTP_PORT");
-    }
+    remove_var("EMAIL");
+    remove_var("SMTP_SERVER");
+    remove_var("EMAIL_PASSWORD");
+    remove_var("SMTP_PORT");
     let res = EmailSender::from_env();
     assert!(res.is_err());
 }
@@ -48,13 +55,11 @@ fn from_env_missing() {
 #[test]
 #[serial]
 fn from_env_valid() {
-    unsafe {
-        env::set_var("MAILKIT_TEMPLATE_DIR", "tests/templates");
-        env::set_var("EMAIL", "user@example.com");
-        env::set_var("SMTP_SERVER", "smtp.example.com");
-        env::set_var("EMAIL_PASSWORD", "password");
-        env::set_var("SMTP_PORT", "25");
-    }
+    set_var("MAILKIT_TEMPLATE_DIR", "tests/templates");
+    set_var("EMAIL", "user@example.com");
+    set_var("SMTP_SERVER", "smtp.example.com");
+    set_var("EMAIL_PASSWORD", "password");
+    set_var("SMTP_PORT", "25");
 
     let res = EmailSender::from_env();
     assert!(res.is_ok());
@@ -71,7 +76,7 @@ fn send_real_gmail() {
     let app_password = "YOUR_GMAIL_APP_PASSWORD"; // App Password, not your Gmail password!
     let dest_email = "DESTINATION_EMAIL@gmail.com"; // Where you want to send
 
-    unsafe { env::set_var("MAILKIT_TEMPLATE_DIR", "tests/templates"); }
+    set_var("MAILKIT_TEMPLATE_DIR", "tests/templates");
 
     let sender = EmailSender::new(
         your_gmail,
