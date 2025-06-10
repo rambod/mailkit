@@ -447,9 +447,11 @@ impl EmailSender {
 }
 
 /// Backward compatibility wrapper around [`EmailSender`].
+#[deprecated(note = "Use EmailSender directly")]
 pub struct SendAgent(pub EmailSender);
 
 impl SendAgent {
+    #[deprecated(note = "Use EmailSender directly")]
     pub fn send_mail(
         &self,
         recipient_email: Vec<String>,
@@ -474,6 +476,7 @@ impl SendAgent {
     }
 
 
+    #[deprecated(note = "Use EmailSender directly")]
     pub fn send_mail_with_template(
         &self,
         recipient_email: String,
