@@ -256,9 +256,9 @@ impl EmailSender {
         Ok(mp)
     }
 
-    fn build_sync_mailer(&self) -> Result<SmtpTransport, MailkitError> {
+    fn build_sync_mailer(&self, use_tls: bool) -> Result<SmtpTransport, MailkitError> {
         let creds = Credentials::new(self.user_email.clone(), self.user_password.clone());
-        let builder = if self.port == 465 {
+        let builder = if self.port == 465 || use_tls {
             SmtpTransport::relay(&self.smtp_server)?
         } else {
             SmtpTransport::starttls_relay(&self.smtp_server)?
@@ -270,9 +270,9 @@ impl EmailSender {
             .build())
     }
 
-    fn build_async_mailer(&self) -> Result<AsyncSmtpTransport<Tokio1Executor>, MailkitError> {
+    fn build_async_mailer(&self, use_tls: bool) -> Result<AsyncSmtpTransport<Tokio1Executor>, MailkitError> {
         let creds = Credentials::new(self.user_email.clone(), self.user_password.clone());
-        let builder = if self.port == 465 {
+        let builder = if self.port == 465 || use_tls {
             AsyncSmtpTransport::<Tokio1Executor>::relay(&self.smtp_server)?
         } else {
             AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&self.smtp_server)?
@@ -292,7 +292,7 @@ impl EmailSender {
         cc: Option<I>,
         bcc: Option<I>,
         attachments: Option<&[String]>,
-        _use_tls: bool,
+        use_tls: bool,
         html: bool,
     ) -> Result<(), MailkitError>
     where
@@ -317,7 +317,7 @@ impl EmailSender {
         } else {
             builder.singlepart(content)?
         };
-        let mailer = self.build_sync_mailer()?;
+        let mailer = self.build_sync_mailer(use_tls)?;
 
         mailer.send(&msg)?;
         Ok(())
@@ -361,7 +361,7 @@ impl EmailSender {
         cc: Option<I>,
         bcc: Option<I>,
         attachments: Option<&[String]>,
-        _use_tls: bool,
+        use_tls: bool,
         html: bool,
     ) -> Result<(), MailkitError>
     where
@@ -387,7 +387,7 @@ impl EmailSender {
             builder.singlepart(content)?
         };
 
-        let mailer = self.build_async_mailer()?;
+        let mailer = self.build_async_mailer(use_tls)?;
 
         mailer.send(msg).await?;
         Ok(())

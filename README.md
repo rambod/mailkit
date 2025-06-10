@@ -63,7 +63,7 @@ sender.send(
     None,                              // CC
     None,                              // BCC
     None,                              // Attachments
-    false,                             // Use TLS (not used, kept for compat)
+    false,                             // Use TLS (true = TLS, false = STARTTLS)
     false                              // Is HTML
 ).unwrap();
 ```
@@ -85,7 +85,7 @@ sender.send_template(
     None,              // CC
     None,              // BCC
     None,              // Attachments
-    false
+    false               // Use TLS (true = TLS, false = STARTTLS)
 ).unwrap();
 ```
 
@@ -99,7 +99,7 @@ sender.send_bulk(
     None,
     None,
     None,
-    false,
+    false,  // Use TLS (true = TLS, false = STARTTLS)
     false,
 ).unwrap();
 ```
