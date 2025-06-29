@@ -2,9 +2,13 @@
 //!
 //! Create an [`EmailSender`] and call [`EmailSender::send`] or
 //! [`EmailSender::send_async`] to deliver messages.
+//!
+//! The async methods require a running Tokio runtime and perform
+//! file attachment reads using `tokio::fs`.
 
 use std::env;
 use std::fs;
+use tokio::fs as tokio_fs;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use lettre::AsyncTransport;
@@ -256,6 +260,27 @@ impl EmailSender {
         Ok(mp)
     }
 
+    async fn attach_files_async(
+        &self,
+        multipart: MultiPart,
+        attachments: &[String],
+    ) -> Result<MultiPart, MailkitError> {
+        let mut mp = multipart;
+        for path in attachments {
+            let data = tokio_fs::read(path).await?;
+            let filename = Path::new(path)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("attachment");
+            let ctype = lettre::message::header::ContentType::parse("application/octet-stream")
+                .map_err(|_| MailkitError::Validation("Invalid content type".into()))?;
+            let attachment = Attachment::new(filename.to_string())
+                .body(data, ctype);
+            mp = mp.singlepart(attachment);
+        }
+        Ok(mp)
+    }
+
     fn build_sync_mailer(&self, use_tls: bool) -> Result<SmtpTransport, MailkitError> {
         let creds = Credentials::new(self.user_email.clone(), self.user_password.clone());
         let builder = if self.port == 465 || use_tls {
@@ -416,7 +441,7 @@ impl EmailSender {
 
         let msg = if let Some(files) = attachments {
             let multipart = MultiPart::mixed().singlepart(content);
-            let multipart = self.attach_files(multipart, files)?;
+            let multipart = self.attach_files_async(multipart, files).await?;
             builder.multipart(multipart)?
         } else {
             builder.singlepart(content)?
