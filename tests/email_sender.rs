@@ -65,6 +65,52 @@ fn from_env_valid() {
     assert!(res.is_ok());
 }
 
+#[test]
+#[serial]
+fn attach_txt_content_type() {
+    use lettre::message::MultiPart;
+    set_var("MAILKIT_TEMPLATE_DIR", "tests/templates");
+    let sender = EmailSender::new(
+        "user@example.com",
+        "smtp.example.com",
+        "password",
+        25,
+        1,
+        true,
+    )
+    .unwrap();
+
+    let mp = MultiPart::mixed().build();
+    let mp = sender
+        .attach_files(mp, &["tests/files/sample.txt".to_string()])
+        .unwrap();
+    let body = String::from_utf8(mp.formatted()).unwrap();
+    assert!(body.contains("Content-Type: text/plain"));
+}
+
+#[tokio::test]
+async fn attach_html_content_type_async() {
+    use lettre::message::MultiPart;
+    set_var("MAILKIT_TEMPLATE_DIR", "tests/templates");
+    let sender = EmailSender::new(
+        "user@example.com",
+        "smtp.example.com",
+        "password",
+        25,
+        1,
+        true,
+    )
+    .unwrap();
+
+    let mp = MultiPart::mixed().build();
+    let mp = sender
+        .attach_files_async(mp, &["tests/files/sample.html".to_string()])
+        .await
+        .unwrap();
+    let body = String::from_utf8(mp.formatted()).unwrap();
+    assert!(body.contains("Content-Type: text/html"));
+}
+
 /// This test will actually send a real email using Gmail SMTP.
 /// You must fill in your real credentials and recipient!
 #[ignore]
