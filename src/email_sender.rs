@@ -15,6 +15,7 @@ use lettre::AsyncTransport;
 use lettre::message::{Attachment, Mailbox, Message, MultiPart, SinglePart};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{AsyncSmtpTransport, SmtpTransport, Tokio1Executor, Transport};
+use mime_guess;
 use tera::{Context, Tera};
 
 use std::error::Error as StdError;
@@ -239,7 +240,7 @@ impl EmailSender {
         Ok(builder)
     }
 
-    fn attach_files(
+    pub fn attach_files(
         &self,
         multipart: MultiPart,
         attachments: &[String],
@@ -251,7 +252,8 @@ impl EmailSender {
                 .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or("attachment");
-            let ctype = lettre::message::header::ContentType::parse("application/octet-stream")
+            let mime = mime_guess::from_path(path).first_or_octet_stream();
+            let ctype = lettre::message::header::ContentType::parse(mime.essence_str())
                 .map_err(|_| MailkitError::Validation("Invalid content type".into()))?;
             let attachment = Attachment::new(filename.to_string())
                 .body(data, ctype);
@@ -260,7 +262,7 @@ impl EmailSender {
         Ok(mp)
     }
 
-    async fn attach_files_async(
+    pub async fn attach_files_async(
         &self,
         multipart: MultiPart,
         attachments: &[String],
@@ -272,7 +274,8 @@ impl EmailSender {
                 .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or("attachment");
-            let ctype = lettre::message::header::ContentType::parse("application/octet-stream")
+            let mime = mime_guess::from_path(path).first_or_octet_stream();
+            let ctype = lettre::message::header::ContentType::parse(mime.essence_str())
                 .map_err(|_| MailkitError::Validation("Invalid content type".into()))?;
             let attachment = Attachment::new(filename.to_string())
                 .body(data, ctype);
