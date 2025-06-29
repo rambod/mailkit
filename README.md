@@ -11,6 +11,7 @@ Website: [rambod.net](https://rambod.net)
 ## Features
 
 - Simple sync and async email sending (SMTP)
+- Async methods require a Tokio runtime
 - HTML or plain text body support
 - Attachments (any file type)
 - Tera template support for dynamic email rendering
@@ -122,6 +123,8 @@ async fn main() {
 }
 ```
 
+Async functions like `send_async` and `send_bulk_async` require a Tokio runtime.
+
 Each recipient receives its own email, and any addresses provided in `cc` or
 `bcc` are included on every message.
 
@@ -141,6 +144,7 @@ Each recipient receives its own email, and any addresses provided in `cc` or
 
 - Provide a slice of file paths (as `&[String]`) to `attachments`.
 - Attachments will be sent as MIME octet-stream.
+- When using async sending, files are read with `tokio::fs`.
 
 ---
 
