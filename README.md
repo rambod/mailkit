@@ -28,7 +28,7 @@ Website: [rambod.net](https://rambod.net)
 
 - lettre
 - tera
-- log (with built-in simple logger)
+- Built-in `SimpleLogger` with lightweight macros
 - serde (for templates)
 
 ## Quick Start
@@ -38,7 +38,6 @@ Website: [rambod.net](https://rambod.net)
 ```toml
 lettre = { version = "0.11", features = ["smtp-transport", "tokio1"] }
 tera = "1.17"
-log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 ```
 
@@ -146,7 +145,8 @@ Each recipient receives its own email, and any addresses provided in `cc` or
 
 ## Logging
 
-- Uses the `log` crate. Call `mailkit::SimpleLogger::init()` to enable basic logging.
+- MailKit provides `info!`, `warn!`, and `error!` macros built into the crate.
+  Call `mailkit::SimpleLogger::init()` to enable simple console logging.
 
 ---
 
